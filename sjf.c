@@ -1,58 +1,75 @@
 #include <stdio.h>
 
-struct Process {
-    int pid;
-    int at;
-    int bt;
-    int ct;
-    int tat;
-    int wt;
-    int rt;
-};
-
 int main() {
-    int n, i, j;
-    struct Process p[20], temp;
-    float total_ct = 0, total_tat = 0, total_wt = 0, total_rt = 0;
+    int n;
+
     printf("Enter number of processes: ");
     scanf("%d", &n);
 
-    for(i = 0; i < n; i++) {
-        p[i].pid = i + 1;
-        printf("Enter Arrival Time and Burst Time for Process %d: ", p[i].pid);
-        scanf("%d %d", &p[i].at, &p[i].bt);
+    int pid[n], at[n], bt[n], ct[n], tat[n], wt[n], rt[n];
+    int completed[n];
+
+    for(int i = 0; i < n; i++) {
+        pid[i] = i + 1;
+        completed[i] = 0;
+
+        printf("Enter Arrival Time and Burst Time for Process %d: ", pid[i]);
+        scanf("%d %d", &at[i], &bt[i]);
     }
-    for(i = 0; i < n - 1; i++) {
-        for(j = i + 1; j < n; j++) {
-            if(p[i].at > p[j].at) {
-                temp = p[i];
-                p[i] = p[j];
-                p[j] = temp;
+
+    int currentTime = 0;
+    int count = 0;
+
+    float total_ct = 0, total_tat = 0, total_wt = 0, total_rt = 0;
+
+    while(count < n) {
+
+        int shortest = -1;
+        int min_bt = 9999;
+
+        for(int i = 0; i < n; i++) {
+
+            if(at[i] <= currentTime &&
+               completed[i] == 0 &&
+               bt[i] < min_bt) {
+
+                min_bt = bt[i];
+                shortest = i;
             }
         }
-    }
-    int currentTime = 0;
 
-    for(i = 0; i < n; i++) {
+        if(shortest == -1) {
+            currentTime++;
+            continue;
+        }
 
-        if(currentTime < p[i].at)
-            currentTime = p[i].at;
-        p[i].rt = currentTime - p[i].at;
-        p[i].ct = currentTime + p[i].bt;
-        p[i].tat = p[i].ct - p[i].at;
-        p[i].wt = p[i].tat - p[i].bt;
-        currentTime = p[i].ct;
-        total_ct += p[i].ct;
-        total_tat += p[i].tat;
-        total_wt += p[i].wt;
-        total_rt += p[i].rt;
+        rt[shortest] = currentTime - at[shortest];
+
+        ct[shortest] = currentTime + bt[shortest];
+
+        tat[shortest] = ct[shortest] - at[shortest];
+
+        wt[shortest] = tat[shortest] - bt[shortest];
+
+        currentTime = ct[shortest];
+
+        completed[shortest] = 1;
+        count++;
+
+        total_ct += ct[shortest];
+        total_tat += tat[shortest];
+        total_wt += wt[shortest];
+        total_rt += rt[shortest];
     }
+
     printf("\nPID\tAT\tBT\tCT\tTAT\tWT\tRT\n");
-    for(i = 0; i < n; i++) {
+
+    for(int i = 0; i < n; i++) {
         printf("P%d\t%d\t%d\t%d\t%d\t%d\t%d\n",
-               p[i].pid, p[i].at, p[i].bt,
-               p[i].ct, p[i].tat, p[i].wt, p[i].rt);
+               pid[i], at[i], bt[i],
+               ct[i], tat[i], wt[i], rt[i]);
     }
+
     printf("\nAverage Completion Time = %.2f", total_ct / n);
     printf("\nAverage Turnaround Time = %.2f", total_tat / n);
     printf("\nAverage Waiting Time = %.2f", total_wt / n);
